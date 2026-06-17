@@ -191,3 +191,5 @@ col_offsets[2] = 2 × margin + board − a4_width   = 27.4 cm  (for margin=1cm)
 col_step       = col_offsets[2] / 2               = 13.7 cm
 row_offsets[1] = 2 × margin + board − a4_height  = 18.7 cm
 ```
+
+Files _50mm contain the chessboard usign a reduced size of 50mm instead of 55mm. This size is also common, especially in environments where space is more limited or slightly smaller pieces are used.
