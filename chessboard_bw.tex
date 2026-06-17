@@ -1,0 +1,140 @@
+% FIDE Tournament Chessboard — B&W, 1cm margin on all outer edges
+% 6-page A4 mosaic: P1 P2 P3 / P4 P5 P6
+%
+% Board: sq=5.5cm, border=1.2cm, total=46.4cm x 46.4cm
+%
+% Geometry (margin=1cm):
+%   tile        = 20.0 x 28.7 cm
+%   col_step    = 13.7 cm   =>  col_offsets = [0, 13.7, 27.4]
+%   row_step    = 18.7 cm   =>  row_offsets = [0, 18.7]
+%   overlap_h   =  6.3 cm
+%   overlap_v   = 10.0 cm
+%
+%   Board origin on page = (margin - xoff,  margin - yoff)
+%   Outer frame sits exactly 1cm from page edge on all outer sides:
+%     P1: left+top   P2: top        P3: right+top
+%     P4: left+bot   P5: bottom     P6: right+bot
+%
+%   Content per page:
+%     P1,P4: files a-d   P2,P5: files c-f   P3,P6: files e-h
+%     P1,P2,P3: ranks 8-4   P4,P5,P6: ranks 5-1
+
+\documentclass[a4paper]{article}
+
+\usepackage[
+  a4paper,
+  top=0mm, bottom=0mm, left=0mm, right=0mm,
+  noheadfoot, nomarginpar
+]{geometry}
+
+\usepackage{tikz}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+\pagestyle{empty}
+
+\def\sq{5.5}
+\def\bd{1.2}
+\def\btotal{46.4}
+
+% -----------------------------------------------------------------------
+% \drawpage{xoffset}{yoffset}
+%   Full A4 tikzpicture (21 x 29.7cm, y grows downward).
+%   Board origin placed at page coords (1.0 - xoff, 1.0 - yoff).
+%   Clipped to A4 boundary.
+% -----------------------------------------------------------------------
+\newcommand{\drawpage}[2]{%
+  \pgfmathsetmacro{\ssx}{1.0 - #1}%
+  \pgfmathsetmacro{\ssy}{1.0 - #2}%
+  \noindent%
+  \begin{tikzpicture}[x=1cm, y=-1cm]
+
+    \useasboundingbox (0,0) rectangle (21, 29.7);
+    \clip (0,0) rectangle (21, 29.7);
+
+    % White background
+    \fill[white] (0,0) rectangle (21,29.7);
+
+    % ---- Dark squares (35% black, ink-saving) ----
+    % a1 = file i=0, rank_row j=7: (0+7)=7 odd => dark ✓
+    \foreach \i in {0,...,7}{
+      \foreach \j in {0,...,7}{
+        \pgfmathsetmacro{\dk}{int(mod(\i+\j,2))}
+        \ifnum\dk=1
+          \fill[black!35]
+            ({\bd+\i*\sq+\ssx}, {\bd+\j*\sq+\ssy})
+            rectangle
+            ({\bd+\i*\sq+\sq+\ssx}, {\bd+\j*\sq+\sq+\ssy});
+        \fi
+      }
+    }
+
+    % ---- Internal grid lines ----
+    \foreach \k in {1,...,7}{
+      \draw[black, line width=0.3pt]
+        ({\bd+\k*\sq+\ssx}, {\bd+\ssy}) -- ({\bd+\k*\sq+\ssx}, {\bd+8*\sq+\ssy});
+      \draw[black, line width=0.3pt]
+        ({\bd+\ssx}, {\bd+\k*\sq+\ssy}) -- ({\bd+8*\sq+\ssx}, {\bd+\k*\sq+\ssy});
+    }
+
+    % ---- Playing area border ----
+    \draw[black, line width=1.2pt]
+      ({\bd+\ssx},{\bd+\ssy}) rectangle ({\bd+8*\sq+\ssx},{\bd+8*\sq+\ssy});
+
+    % ---- Outer frame (enclosing board + label strip) ----
+    \draw[black, line width=0.8pt]
+      ({\ssx},{\ssy}) rectangle ({\btotal+\ssx},{\btotal+\ssy});
+
+    % ---- Coordinate labels (16pt bold) ----
+    {\fontsize{16}{18}\selectfont\bfseries
+
+    % Files — bottom border (normal)
+    \foreach \i/\ltr in {0/a,1/b,2/c,3/d,4/e,5/f,6/g,7/h}{
+      \node[anchor=center] at
+        ({\bd+\i*\sq+2.75+\ssx}, {\bd+8*\sq+0.6+\ssy}) {\ltr};
+    }
+
+    % Files — top border (rotated 180°, same letters)
+    \foreach \i/\ltr in {0/a,1/b,2/c,3/d,4/e,5/f,6/g,7/h}{
+      \node[anchor=center, rotate=180] at
+        ({\bd+\i*\sq+2.75+\ssx}, {0.6+\ssy}) {\ltr};
+    }
+
+    % Ranks — left border (normal): j=0=>rank8 top, j=7=>rank1 bottom
+    \foreach \j/\num in {0/8,1/7,2/6,3/5,4/4,5/3,6/2,7/1}{
+      \node[anchor=center] at
+        ({0.6+\ssx}, {\bd+\j*\sq+2.75+\ssy}) {\num};
+    }
+
+    % Ranks — right border (rotated 180°, same numbers)
+    \foreach \j/\num in {0/8,1/7,2/6,3/5,4/4,5/3,6/2,7/1}{
+      \node[anchor=center, rotate=180] at
+        ({\bd+8*\sq+0.6+\ssx}, {\bd+\j*\sq+2.75+\ssy}) {\num};
+    }
+
+    }% end font group
+
+  \end{tikzpicture}%
+}
+
+\begin{document}
+
+% P1: col1 row1 — outer frame 1cm from top-left
+\drawpage{0}{0}\newpage
+
+% P2: col2 row1 — outer frame 1cm from top
+\drawpage{13.7}{0}\newpage
+
+% P3: col3 row1 — outer frame 1cm from top-right
+\drawpage{27.4}{0}\newpage
+
+% P4: col1 row2 — outer frame 1cm from left-bottom
+\drawpage{0}{18.7}\newpage
+
+% P5: col2 row2 — outer frame 1cm from bottom
+\drawpage{13.7}{18.7}\newpage
+
+% P6: col3 row2 — outer frame 1cm from right-bottom
+\drawpage{27.4}{18.7}
+
+\end{document}
