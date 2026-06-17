@@ -11,6 +11,8 @@ A full FIDE chessboard is 46.4 × 46.4 cm — far larger than a single A4 sheet 
 
 The result is a usable paper or light-card chessboard suitable for club practice, school use, travel, or as a template for cutting a mat or vinyl print. It complies with FIDE algebraic notation requirements and correct board orientation.
 
+![Chessboard pages preview — 3×2 mosaic layout (P1–P6)](chessboard_preview.png)
+
 **Why LaTeX and PDF?** The board is drawn entirely in vector graphics using TikZ. Every line, square, and label is geometrically exact — no raster scaling, no blurry edges at any print resolution. The PDF can be sent directly to any printer or print shop. The LaTeX source is a single self-contained file with no external dependencies beyond a standard TeX distribution, making it easy to modify square size, colours, margin, or font.
 
 **How to use it:**
