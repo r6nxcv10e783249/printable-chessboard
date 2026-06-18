@@ -1,0 +1,264 @@
+% Label style sampler — 8 pages, one label treatment per page
+% Fixed pattern: crosshatch 45°+135°, 3.0mm spacing, 0.30pt weight
+% Shows squares g1 (DARK), g2 (LIGHT), h1 (LIGHT), h2 (DARK)
+% with labels g, h (files) and 1, 2 (ranks)
+%
+% Label styles:
+%  1. All black — uniform black on all squares
+%  2. White+black outline (hollow glyph) — contour package
+%  3. Black outline box around label — rectangular frame
+%  4. Dark badge — white text on dark rounded rect
+%  5. White badge (opaque) — black text on white rect, both sq types
+%  6. Semi-transparent white badge — white 55% opacity behind black text
+%  7. White badge no border — clean white backing, no outline
+%  8. Drop shadow — white text with black shadow offset
+
+\documentclass[a4paper]{article}
+\usepackage[a4paper, top=25mm, bottom=20mm,
+            left=20mm, right=20mm,
+            noheadfoot, nomarginpar]{geometry}
+\usepackage{tikz}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{xcolor}
+\usepackage[outline]{contour}
+\contourlength{0.7pt}
+
+\pagestyle{empty}
+
+\def\sq{4.9}
+\def\lpad{0.30}   % label inset from square edge
+
+% Fixed crosshatch pattern code (used on every page)
+\newcommand{\crosshatch}{%
+  \foreach \cc in {
+    -4.95,-4.53,-4.10,-3.67,-3.25,-2.82,-2.40,-1.97,-1.55,
+    -1.12,-0.69,-0.27, 0.15, 0.58, 1.00, 1.43, 1.85, 2.28,
+     2.70, 3.13, 3.55, 3.98, 4.40, 4.83}{%
+    \draw[black,line width=0.30pt](0,\cc)--(\sq,\cc+\sq);
+    \draw[black,line width=0.30pt](0,\cc+\sq)--(\sq,\cc);}%
+}
+
+% Draw dark square with crosshatch pattern
+\newcommand{\patsquare}[2]{%
+  \begin{scope}[shift={(#1,#2)}]
+    \fill[white](0,0)rectangle(\sq,\sq);
+    \begin{scope}
+      \clip(0,0)rectangle(\sq,\sq);
+      \crosshatch
+    \end{scope}
+  \end{scope}
+}
+
+% -----------------------------------------------------------------------
+% \labelpage{num}{title}{detail}
+%   {lblDARKfile}{lblDARKrank}   — label nodes for dark sq file/rank
+%   {lblLIGHTfile}{lblLIGHTrank} — label nodes for light sq file/rank
+%
+% The macro places the 2x2 board then calls the label node commands.
+% Each label command receives the anchor position as a pre-set coordinate.
+% We use named coordinates: 
+%   (Lgfile) = bottom-centre of g1 (dark, bot-left)
+%   (Lhfile) = bottom-centre of h1 (light, bot-right)
+%   (Lhrank1) = right-centre of h1 (light, bot-right)
+%   (Lh2rank) = right-centre of h2 (dark, top-right)
+% -----------------------------------------------------------------------
+\newcommand{\labelpage}[7]{%
+  % #1 num  #2 title  #3 detail
+  % #4 dark-file label node  #5 dark-rank label node
+  % #6 light-file label node  #7 light-rank label node
+  \noindent
+  \begin{tikzpicture}[x=1cm, y=-1cm]
+    \useasboundingbox(0,0)rectangle(17.1,23.7);
+
+    % Title
+    \node[anchor=north west,
+          font=\fontsize{16}{20}\selectfont\bfseries,text=black]
+      at(0,0){Sample #1 — #2};
+    \node[anchor=north west,
+          font=\fontsize{10}{13}\selectfont,text=black!55]
+      at(0,1.05){#3};
+
+    % Board geometry
+    \pgfmathsetmacro{\bx}{(17.1-2*\sq)/2}
+    \def\by{2.8}
+
+    % Light squares
+    \fill[white](\bx,\by)rectangle(\bx+\sq,\by+\sq);           % g2 top-left
+    \fill[white](\bx+\sq,\by+\sq)rectangle(\bx+2*\sq,\by+2*\sq); % h1 bot-right
+
+    % Dark squares with pattern
+    \patsquare{\bx+\sq}{\by}          % h2 top-right (DARK)
+    \patsquare{\bx}{\by+\sq}          % g1 bot-left  (DARK)
+
+    % Grid lines
+    \foreach \k in {0,1,2}{
+      \draw[black,line width=0.4pt]
+        (\bx+\k*\sq,\by)--(\bx+\k*\sq,\by+2*\sq);
+      \draw[black,line width=0.4pt]
+        (\bx,\by+\k*\sq)--(\bx+2*\sq,\by+\k*\sq);
+    }
+    \draw[black,line width=1.4pt]
+      (\bx,\by)rectangle(\bx+2*\sq,\by+2*\sq);
+
+    % Named coordinates for label positions
+    % g1 (bot-left, DARK): file label bottom-centre
+    \coordinate(Lg1file) at (\bx+\sq/2,       \by+2*\sq-\lpad);
+    % g2 (top-left, LIGHT): no label
+    % h1 (bot-right, LIGHT): file label bottom-centre, rank label right-centre
+    \coordinate(Lh1file) at (\bx+3*\sq/2,     \by+2*\sq-\lpad);
+    \coordinate(Lh1rank) at (\bx+2*\sq-\lpad, \by+3*\sq/2);
+    % h2 (top-right, DARK): rank label right-centre
+    \coordinate(Lh2rank) at (\bx+2*\sq-\lpad, \by+\sq/2);
+
+    % Labels — dark squares: #4 (file g on g1), #5 (rank 2 on h2)
+    % Labels — light squares: #6 (file h on h1), #7 (rank 1 on h1)
+    #4  % file g on g1 (DARK)
+    #5  % rank 2 on h2 (DARK)
+    #6  % file h on h1 (LIGHT)
+    #7  % rank 1 on h1 (LIGHT)
+
+    % Description box
+    \draw[black!20,line width=0.5pt,rounded corners=2pt]
+      (0,\by+2*\sq+0.55)rectangle(17.1,\by+2*\sq+2.6);
+    \fill[black!4,rounded corners=2pt]
+      (0,\by+2*\sq+0.55)rectangle(17.1,\by+2*\sq+2.6);
+    \node[anchor=north west,font=\fontsize{8}{10}\selectfont\bfseries,text=black!40]
+      at(0.3,\by+2*\sq+0.85){LABEL SPECIFICATION};
+    \node[anchor=north west,font=\fontsize{10.5}{14}\selectfont,text=black]
+      at(0.3,\by+2*\sq+1.3){#3};
+    \node[anchor=north west,font=\fontsize{8.5}{11}\selectfont,text=black!50]
+      at(0.3,\by+2*\sq+2.0){%
+      Dark squares: g1 (bot-left) and h2 (top-right)
+      \enspace\textbullet\enspace
+      Fixed pattern: crosshatch 45°+135°, 3.0\,mm, 0.30\,pt};
+
+  \end{tikzpicture}
+  \newpage
+}
+
+% Font shorthand
+\newcommand{\lf}{\fontsize{12}{13}\selectfont\bfseries}
+
+\begin{document}
+
+% ============================================================
+% Sample 1 — All black labels
+% ============================================================
+\labelpage{1}{All black labels}{%
+  Dark squares: black text, no background \quad
+  Light squares: black text, no background}{%
+  % g1 file (DARK) — black
+  \node[anchor=south,font=\lf,text=black] at(Lg1file){g};}{%
+  % h2 rank (DARK) — black rotated
+  \node[anchor=west,rotate=180,font=\lf,text=black] at(Lh2rank){2};}{%
+  % h1 file (LIGHT) — black
+  \node[anchor=south,font=\lf,text=black] at(Lh1file){h};}{%
+  % h1 rank (LIGHT) — black rotated
+  \node[anchor=west,rotate=180,font=\lf,text=black] at(Lh1rank){1};}
+
+% ============================================================
+% Sample 2 — White with black outline (hollow glyph via contour)
+% ============================================================
+\labelpage{2}{White with black outline (hollow glyph)}{%
+  Dark squares: white fill, black perimeter outline (contour)
+  \quad Light squares: black text}{%
+  \node[anchor=south,font=\lf] at(Lg1file)
+    {\contour{black}{\textcolor{white}{g}}};}{%
+  \node[anchor=west,rotate=180,font=\lf] at(Lh2rank)
+    {\contour{black}{\textcolor{white}{2}}};}{%
+  \node[anchor=south,font=\lf,text=black] at(Lh1file){h};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black] at(Lh1rank){1};}
+
+% ============================================================
+% Sample 3 — Black outline box (rectangular frame around label)
+% ============================================================
+\labelpage{3}{Black outline box around label}{%
+  Dark squares: black text inside thin black rectangular frame
+  \quad Light squares: black text no frame}{%
+  \node[anchor=south,font=\lf,text=black,
+        draw=black,line width=0.5pt,inner sep=1.2pt] at(Lg1file){g};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black,
+        draw=black,line width=0.5pt,inner sep=1.2pt] at(Lh2rank){2};}{%
+  \node[anchor=south,font=\lf,text=black] at(Lh1file){h};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black] at(Lh1rank){1};}
+
+% ============================================================
+% Sample 4 — Dark badge: white text on dark rounded rect
+% ============================================================
+\labelpage{4}{Dark badge}{%
+  Dark squares: white text on dark grey rounded rect badge
+  \quad Light squares: black text on light grey badge}{%
+  \node[anchor=south,font=\lf,text=white,
+        fill=black!65,rounded corners=1.5pt,inner sep=1.5pt] at(Lg1file){g};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=white,
+        fill=black!65,rounded corners=1.5pt,inner sep=1.5pt] at(Lh2rank){2};}{%
+  \node[anchor=south,font=\lf,text=black,
+        fill=black!18,rounded corners=1.5pt,inner sep=1.5pt] at(Lh1file){h};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black,
+        fill=black!18,rounded corners=1.5pt,inner sep=1.5pt] at(Lh1rank){1};}
+
+% ============================================================
+% Sample 5 — White badge: black text on white opaque rect (both sq types)
+% ============================================================
+\labelpage{5}{White opaque badge (consistent both square types)}{%
+  All squares: black text on white opaque rounded rect — uniform appearance}{%
+  \node[anchor=south,font=\lf,text=black,
+        fill=white,rounded corners=1.5pt,inner sep=1.5pt] at(Lg1file){g};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black,
+        fill=white,rounded corners=1.5pt,inner sep=1.5pt] at(Lh2rank){2};}{%
+  \node[anchor=south,font=\lf,text=black,
+        fill=white,rounded corners=1.5pt,inner sep=1.5pt] at(Lh1file){h};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black,
+        fill=white,rounded corners=1.5pt,inner sep=1.5pt] at(Lh1rank){1};}
+
+% ============================================================
+% Sample 6 — Semi-transparent white badge (55% opacity)
+% Done by drawing a filled rect first, then placing black text node
+% ============================================================
+\labelpage{6}{Semi-transparent white badge}{%
+  Dark squares: black text, white rect at 55\% opacity behind label
+  \quad Light squares: black text no badge}{%
+  % g1 file (DARK): manual badge — rect then text
+  \fill[white,opacity=0.55]
+    (\bx+\sq/2-0.38,\by+2*\sq-\lpad-0.05)
+    rectangle(\bx+\sq/2+0.38,\by+2*\sq-\lpad-0.60);
+  \node[anchor=south,font=\lf,text=black] at(Lg1file){g};}{%
+  % h2 rank (DARK): manual badge rotated area
+  \fill[white,opacity=0.55]
+    (\bx+2*\sq-\lpad-0.05,\by+\sq/2-0.38)
+    rectangle(\bx+2*\sq-\lpad-0.60,\by+\sq/2+0.38);
+  \node[anchor=west,rotate=180,font=\lf,text=black] at(Lh2rank){2};}{%
+  \node[anchor=south,font=\lf,text=black] at(Lh1file){h};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black] at(Lh1rank){1};}
+
+% ============================================================
+% Sample 7 — White badge no border (clean white backing, no outline)
+% ============================================================
+\labelpage{7}{White badge, no border}{%
+  Dark squares: dark grey text on white rect, no border
+  \quad Light squares: dark grey text plain}{%
+  \node[anchor=south,font=\lf,text=black!80,
+        fill=white,inner sep=1.5pt] at(Lg1file){g};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black!80,
+        fill=white,inner sep=1.5pt] at(Lh2rank){2};}{%
+  \node[anchor=south,font=\lf,text=black!80] at(Lh1file){h};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black!80] at(Lh1rank){1};}
+
+% ============================================================
+% Sample 8 — Drop shadow: white text with black offset shadow
+% ============================================================
+\labelpage{8}{White text with black drop shadow}{%
+  Dark squares: white text + black shadow offset 0.5pt
+  \quad Light squares: black text no shadow}{%
+  % Shadow first (black, offset), then white on top
+  \node[anchor=south,font=\lf,text=black]
+    at(\bx+\sq/2+0.02,\by+2*\sq-\lpad+0.02){g};
+  \node[anchor=south,font=\lf,text=white] at(Lg1file){g};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black]
+    at(\bx+2*\sq-\lpad+0.02,\by+\sq/2+0.02){2};
+  \node[anchor=west,rotate=180,font=\lf,text=white] at(Lh2rank){2};}{%
+  \node[anchor=south,font=\lf,text=black] at(Lh1file){h};}{%
+  \node[anchor=west,rotate=180,font=\lf,text=black] at(Lh1rank){1};}
+
+\end{document}
