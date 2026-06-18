@@ -1,0 +1,277 @@
+% Pattern sampler — 12 pages, one pattern per page
+% Shows squares g1, g2, h1, h2 (49mm each) with labels and pattern fills.
+%
+% KEY FIX: each dark square uses a shifted scope so pattern coords (0,0)-(sq,sq)
+% map exactly onto that square in global coords. Clip is also (0,0)-(sq,sq)
+% within the shifted scope.
+%
+% Square layout (y grows downward):
+%   top-left  = g2 (LIGHT) at (bx,      by     )
+%   top-right = h2 (DARK)  at (bx+sq,   by     )
+%   bot-left  = g1 (DARK)  at (bx,      by+sq  )
+%   bot-right = h1 (LIGHT) at (bx+sq,   by+sq  )
+%
+% Labels (only on outermost squares of full board):
+%   g1 (DARK):  file 'g'  bottom-centre, white
+%   g2 (LIGHT): no label
+%   h1 (LIGHT): file 'h'  bottom-centre, dark grey | rank '1' right-centre, dark grey, rot180
+%   h2 (DARK):  rank '2'  right-centre, white, rot180
+
+\documentclass[a4paper]{article}
+\usepackage[a4paper, top=25mm, bottom=20mm,
+            left=20mm, right=20mm,
+            noheadfoot, nomarginpar]{geometry}
+\usepackage{tikz}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\pagestyle{empty}
+
+\def\sq{4.9}    % square size cm
+\def\lpad{0.22} % label inset from edge cm
+
+% -----------------------------------------------------------------------
+% \patsquare{x0}{y0}{patcode}
+%   Draws a dark square at global (x0,y0)-(x0+sq,y0+sq).
+%   Opens a shifted+clipped scope so {patcode} uses local coords (0,0)-(sq,sq).
+%   White base fill is included automatically.
+% -----------------------------------------------------------------------
+\newcommand{\patsquare}[3]{%
+  \begin{scope}[shift={(#1,#2)}]
+    % White base
+    \fill[white] (0,0) rectangle (\sq,\sq);
+    % Clipped pattern in local coords
+    \begin{scope}
+      \clip (0,0) rectangle (\sq,\sq);
+      #3
+    \end{scope}
+  \end{scope}
+}
+
+% -----------------------------------------------------------------------
+% \boardpage{sampnum}{title}{detail}{patcode}
+% -----------------------------------------------------------------------
+\newcommand{\boardpage}[4]{%
+  \noindent
+  \begin{tikzpicture}[x=1cm, y=-1cm]
+
+    \useasboundingbox (0,0) rectangle (17.1, 23.7);
+
+    % -- Title --
+    \node[anchor=north west,
+          font=\fontsize{16}{20}\selectfont\bfseries, text=black]
+      at (0,0) {Sample #1 — #2};
+    \node[anchor=north west,
+          font=\fontsize{10}{13}\selectfont, text=black!55]
+      at (0,1.05) {#3};
+
+    % -- Board: centred horizontally, top at by=2.8cm --
+    % hcentre = (17.1 - 2*sq)/2 = (17.1-9.8)/2 = 3.65
+    \pgfmathsetmacro{\bx}{(17.1 - 2*\sq)/2}
+    \def\by{2.8}
+
+    % Light squares (plain white)
+    \fill[white] (\bx,        \by)      rectangle (\bx+\sq,   \by+\sq);
+    \fill[white] (\bx+\sq,    \by+\sq)  rectangle (\bx+2*\sq, \by+2*\sq);
+
+    % Dark squares with pattern (shifted local scope)
+    \patsquare{\bx+\sq}{\by}{#4}      % h2: top-right
+    \patsquare{\bx}{\by+\sq}{#4}      % g1: bot-left
+
+    % Grid lines
+    \foreach \k in {0,1,2}{
+      \draw[black, line width=0.4pt]
+        (\bx+\k*\sq,\by) -- (\bx+\k*\sq,\by+2*\sq);
+      \draw[black, line width=0.4pt]
+        (\bx,\by+\k*\sq) -- (\bx+2*\sq,\by+\k*\sq);
+    }
+    \draw[black, line width=1.4pt]
+      (\bx,\by) rectangle (\bx+2*\sq,\by+2*\sq);
+
+    % Labels
+    % g1 (bot-left, DARK): file 'g', bottom of square, white
+    \node[anchor=south, font=\fontsize{12}{13}\selectfont\bfseries, text=white]
+      at (\bx+\sq/2, \by+2*\sq-\lpad) {g};
+    % h1 (bot-right, LIGHT): file 'h', bottom of square, dark
+    \node[anchor=south, font=\fontsize{12}{13}\selectfont\bfseries, text=black!70]
+      at (\bx+3*\sq/2, \by+2*\sq-\lpad) {h};
+    % h1 (bot-right, LIGHT): rank '1', right of square, dark, rot180
+    \node[anchor=west, rotate=180, font=\fontsize{12}{13}\selectfont\bfseries, text=black!70]
+      at (\bx+2*\sq-\lpad, \by+3*\sq/2) {1};
+    % h2 (top-right, DARK): rank '2', right of square, white, rot180
+    \node[anchor=west, rotate=180, font=\fontsize{12}{13}\selectfont\bfseries, text=white]
+      at (\bx+2*\sq-\lpad, \by+\sq/2) {2};
+
+    % Description box
+    \draw[black!20, line width=0.5pt, rounded corners=2pt]
+      (0,\by+2*\sq+0.55) rectangle (17.1,\by+2*\sq+2.6);
+    \fill[black!4, rounded corners=2pt]
+      (0,\by+2*\sq+0.55) rectangle (17.1,\by+2*\sq+2.6);
+    \node[anchor=north west, font=\fontsize{8}{10}\selectfont\bfseries, text=black!40]
+      at (0.3,\by+2*\sq+0.85) {PATTERN SPECIFICATION};
+    \node[anchor=north west, font=\fontsize{10.5}{14}\selectfont, text=black]
+      at (0.3,\by+2*\sq+1.3) {#3};
+    \node[anchor=north west, font=\fontsize{8.5}{11}\selectfont, text=black!50]
+      at (0.3,\by+2*\sq+2.0)
+      {Dark squares: g1 (file g, rank 1) and h2 (file h, rank 2)
+       \enspace\textbullet\enspace Light squares: g2 and h1 (white, no ink)};
+
+  \end{tikzpicture}
+  \newpage
+}
+
+\begin{document}
+
+% ------------------------------------------------------------------
+% Sample 1 — Horizontal lines 1.0mm
+% ------------------------------------------------------------------
+\boardpage{1}{Horizontal lines}{%
+  Angle: 0° \quad Line spacing: 1.0 mm \quad Line weight: 0.35 pt}{%
+  \foreach \yy in {
+    0.00,0.10,0.20,0.30,0.40,0.50,0.60,0.70,0.80,0.90,
+    1.00,1.10,1.20,1.30,1.40,1.50,1.60,1.70,1.80,1.90,
+    2.00,2.10,2.20,2.30,2.40,2.50,2.60,2.70,2.80,2.90,
+    3.00,3.10,3.20,3.30,3.40,3.50,3.60,3.70,3.80,3.90,
+    4.00,4.10,4.20,4.30,4.40,4.50,4.60,4.70,4.80}{%
+    \draw[black,line width=0.35pt](0,\yy)--(\sq,\yy);}}
+
+% ------------------------------------------------------------------
+% Sample 2 — Horizontal lines 1.5mm
+% ------------------------------------------------------------------
+\boardpage{2}{Horizontal lines}{%
+  Angle: 0° \quad Line spacing: 1.5 mm \quad Line weight: 0.35 pt}{%
+  \foreach \yy in {
+    0.00,0.15,0.30,0.45,0.60,0.75,0.90,1.05,1.20,
+    1.35,1.50,1.65,1.80,1.95,2.10,2.25,2.40,2.55,
+    2.70,2.85,3.00,3.15,3.30,3.45,3.60,3.75,3.90,
+    4.05,4.20,4.35,4.50,4.65,4.80}{%
+    \draw[black,line width=0.35pt](0,\yy)--(\sq,\yy);}}
+
+% ------------------------------------------------------------------
+% Sample 3 — Horizontal lines 2.5mm
+% ------------------------------------------------------------------
+\boardpage{3}{Horizontal lines}{%
+  Angle: 0° \quad Line spacing: 2.5 mm \quad Line weight: 0.35 pt}{%
+  \foreach \yy in {
+    0.00,0.25,0.50,0.75,1.00,1.25,1.50,1.75,
+    2.00,2.25,2.50,2.75,3.00,3.25,3.50,3.75,
+    4.00,4.25,4.50,4.75}{%
+    \draw[black,line width=0.35pt](0,\yy)--(\sq,\yy);}}
+
+% ------------------------------------------------------------------
+% Sample 4 — Vertical lines 1.0mm
+% ------------------------------------------------------------------
+\boardpage{4}{Vertical lines}{%
+  Angle: 90° \quad Line spacing: 1.0 mm \quad Line weight: 0.35 pt}{%
+  \foreach \xx in {
+    0.00,0.10,0.20,0.30,0.40,0.50,0.60,0.70,0.80,0.90,
+    1.00,1.10,1.20,1.30,1.40,1.50,1.60,1.70,1.80,1.90,
+    2.00,2.10,2.20,2.30,2.40,2.50,2.60,2.70,2.80,2.90,
+    3.00,3.10,3.20,3.30,3.40,3.50,3.60,3.70,3.80,3.90,
+    4.00,4.10,4.20,4.30,4.40,4.50,4.60,4.70,4.80}{%
+    \draw[black,line width=0.35pt](\xx,0)--(\xx,\sq);}}
+
+% ------------------------------------------------------------------
+% Sample 5 — Vertical lines 2.5mm
+% ------------------------------------------------------------------
+\boardpage{5}{Vertical lines}{%
+  Angle: 90° \quad Line spacing: 2.5 mm \quad Line weight: 0.35 pt}{%
+  \foreach \xx in {
+    0.00,0.25,0.50,0.75,1.00,1.25,1.50,1.75,
+    2.00,2.25,2.50,2.75,3.00,3.25,3.50,3.75,
+    4.00,4.25,4.50,4.75}{%
+    \draw[black,line width=0.35pt](\xx,0)--(\xx,\sq);}}
+
+% ------------------------------------------------------------------
+% Sample 6 — Grid H+V 2.0mm
+% ------------------------------------------------------------------
+\boardpage{6}{Grid (horizontal + vertical)}{%
+  Angles: 0° + 90° \quad Line spacing: 2.0 mm \quad Line weight: 0.25 pt}{%
+  \foreach \kk in {
+    0.00,0.20,0.40,0.60,0.80,1.00,1.20,1.40,1.60,1.80,
+    2.00,2.20,2.40,2.60,2.80,3.00,3.20,3.40,3.60,3.80,
+    4.00,4.20,4.40,4.60,4.80}{%
+    \draw[black,line width=0.25pt](\kk,0)--(\kk,\sq);
+    \draw[black,line width=0.25pt](0,\kk)--(\sq,\kk);}}
+
+% ------------------------------------------------------------------
+% Sample 7 — Diagonal 45° 1.5mm
+% perpendicular spacing 1.5mm => axis step = 1.5*sqrt(2) = 0.2121cm
+% lines: y = x + c  => draw (0,c)--(sq, c+sq)
+% ------------------------------------------------------------------
+\boardpage{7}{Diagonal lines}{%
+  Angle: 45° \quad Line spacing: 1.5 mm \quad Line weight: 0.35 pt}{%
+  \foreach \cc in {
+    -4.90,-4.69,-4.48,-4.27,-4.06,-3.85,-3.64,-3.43,-3.22,-3.01,
+    -2.80,-2.59,-2.38,-2.17,-1.96,-1.75,-1.54,-1.33,-1.12,-0.91,
+    -0.70,-0.49,-0.28,-0.07, 0.14, 0.35, 0.56, 0.77, 0.98, 1.19,
+     1.40, 1.61, 1.82, 2.03, 2.24, 2.45, 2.66, 2.87, 3.08, 3.29,
+     3.50, 3.71, 3.92, 4.13, 4.34, 4.55, 4.76}{%
+    \draw[black,line width=0.35pt](0,\cc)--(\sq,\cc+\sq);}}
+
+% ------------------------------------------------------------------
+% Sample 8 — Diagonal 45° 2.5mm
+% axis step = 2.5*sqrt(2) = 0.3536cm
+% ------------------------------------------------------------------
+\boardpage{8}{Diagonal lines}{%
+  Angle: 45° \quad Line spacing: 2.5 mm \quad Line weight: 0.35 pt}{%
+  \foreach \cc in {
+    -4.95,-4.60,-4.24,-3.89,-3.54,-3.18,-2.83,-2.47,-2.12,
+    -1.77,-1.41,-1.06,-0.71,-0.35, 0.00, 0.35, 0.71, 1.06,
+     1.41, 1.77, 2.12, 2.47, 2.83, 3.18, 3.54, 3.89, 4.24,
+     4.60, 4.95}{%
+    \draw[black,line width=0.35pt](0,\cc)--(\sq,\cc+\sq);}}
+
+% ------------------------------------------------------------------
+% Sample 9 — Crosshatch 45°+135° 2.0mm
+% axis step = 2.0*sqrt(2) = 0.2828cm
+% ------------------------------------------------------------------
+\boardpage{9}{Crosshatch diagonal}{%
+  Angles: 45° + 135° \quad Line spacing: 2.0 mm \quad Line weight: 0.25 pt}{%
+  \foreach \cc in {
+    -4.95,-4.67,-4.38,-4.10,-3.82,-3.54,-3.25,-2.97,-2.69,
+    -2.40,-2.12,-1.84,-1.56,-1.27,-0.99,-0.71,-0.42,-0.14,
+     0.14, 0.42, 0.71, 0.99, 1.27, 1.56, 1.84, 2.12, 2.40,
+     2.69, 2.97, 3.25, 3.54, 3.82, 4.10, 4.38, 4.67, 4.95}{%
+    \draw[black,line width=0.25pt](0,\cc)--(\sq,\cc+\sq);
+    \draw[black,line width=0.25pt](0,\cc+\sq)--(\sq,\cc);}}
+
+% ------------------------------------------------------------------
+% Sample 10 — Crosshatch 45°+135° 3.0mm
+% axis step = 3.0*sqrt(2) = 0.4243cm
+% ------------------------------------------------------------------
+\boardpage{10}{Crosshatch diagonal}{%
+  Angles: 45° + 135° \quad Line spacing: 3.0 mm \quad Line weight: 0.30 pt}{%
+  \foreach \cc in {
+    -4.95,-4.53,-4.10,-3.67,-3.25,-2.82,-2.40,-1.97,-1.55,
+    -1.12,-0.69,-0.27, 0.15, 0.58, 1.00, 1.43, 1.85, 2.28,
+     2.70, 3.13, 3.55, 3.98, 4.40, 4.83}{%
+    \draw[black,line width=0.30pt](0,\cc)--(\sq,\cc+\sq);
+    \draw[black,line width=0.30pt](0,\cc+\sq)--(\sq,\cc);}}
+
+% ------------------------------------------------------------------
+% Sample 11 — Diagonal 135° 2.0mm
+% ------------------------------------------------------------------
+\boardpage{11}{Diagonal lines}{%
+  Angle: 135° \quad Line spacing: 2.0 mm \quad Line weight: 0.35 pt}{%
+  \foreach \cc in {
+    -4.95,-4.67,-4.38,-4.10,-3.82,-3.54,-3.25,-2.97,-2.69,
+    -2.40,-2.12,-1.84,-1.56,-1.27,-0.99,-0.71,-0.42,-0.14,
+     0.14, 0.42, 0.71, 0.99, 1.27, 1.56, 1.84, 2.12, 2.40,
+     2.69, 2.97, 3.25, 3.54, 3.82, 4.10, 4.38, 4.67, 4.95}{%
+    \draw[black,line width=0.35pt](0,\cc+\sq)--(\sq,\cc);}}
+
+% ------------------------------------------------------------------
+% Sample 12 — Dot grid 3.0mm, radius 0.5mm
+% dots at 0.15 + n*0.3 cm starting offset 0.15cm
+% ------------------------------------------------------------------
+\boardpage{12}{Dot grid}{%
+  Dot spacing: 3.0 mm \quad Dot radius: 0.5 mm \quad Arrangement: square grid}{%
+  \foreach \xx in {
+    0.15,0.45,0.75,1.05,1.35,1.65,1.95,2.25,
+    2.55,2.85,3.15,3.45,3.75,4.05,4.35,4.65}{%
+    \foreach \yy in {
+      0.15,0.45,0.75,1.05,1.35,1.65,1.95,2.25,
+      2.55,2.85,3.15,3.45,3.75,4.05,4.35,4.65}{%
+      \fill[black](\xx,\yy)circle(0.05);}}}
+
+\end{document}
