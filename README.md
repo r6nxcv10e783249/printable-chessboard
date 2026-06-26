@@ -193,5 +193,7 @@ row_offsets[1] = 2 × margin + board − a4_height  = 18.7 cm
 ```
 
 Files _50mm contain the chessboard usign a reduced size of 50mm instead of 55mm. This size is also common, especially in environments where space is more limited or slightly smaller pieces are used.
+https://github.com/r6nxcv10e783249/printable-chessboard/blob/main/chessboard_50mm_3x2_xhatch3mm_label7.pdf
+
 https://github.com/r6nxcv10e783249/printable-chessboard/blob/2x2/chessboard_49mm_2x2_xhatch3mm_label7.pdf also resents a different design compromising a bit the square size but fitting in 4 pages.
 
